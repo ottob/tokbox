@@ -29,11 +29,11 @@ type Tokbox struct {
 }
 
 type Session struct {
-	SessionId     string `xml:"session_id"`
-	PartnerId     string `xml:"partner_id"`
-	CreateDt      string `xml:"create_dt"`
-	SessionStatus string `xml:"session_status"`
-	t             *Tokbox
+	SessionId     string  `xml:"session_id"`
+	PartnerId     string  `xml:"partner_id"`
+	CreateDt      string  `xml:"create_dt"`
+	SessionStatus string  `xml:"session_status"`
+	T             *Tokbox `xml:"-"`
 }
 
 //private - only for parsing xml purposes
@@ -63,7 +63,7 @@ func (s *Session) Token(role string, connectionData string, expiration int64) (s
 	}
 	dataStr += "&nonce=" + url.QueryEscape(fmt.Sprintf("%d", rand.Intn(999999)))
 
-	h := hmac.New(sha1.New, []byte(s.t.partnerSecret))
+	h := hmac.New(sha1.New, []byte(s.T.partnerSecret))
 	n, err := h.Write([]byte(dataStr))
 	if err != nil {
 		return "", err
@@ -73,7 +73,7 @@ func (s *Session) Token(role string, connectionData string, expiration int64) (s
 	}
 
 	preCoded := ""
-	preCoded += "partner_id=" + s.t.apiKey
+	preCoded += "partner_id=" + s.T.apiKey
 	preCoded += "&sig=" + fmt.Sprintf("%x:%s", h.Sum(nil), dataStr)
 
 	var buf bytes.Buffer
@@ -118,6 +118,6 @@ func (t *Tokbox) NewSession(location string, p2p bool) (*Session, error) {
 		return &Session{}, fmt.Errorf("tokbox did not return a session")
 	}
 	o := s.Sessions[0]
-	o.t = t
+	o.T = t
 	return &o, nil
 }
